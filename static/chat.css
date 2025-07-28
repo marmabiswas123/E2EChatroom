@@ -1,0 +1,71 @@
+body, html{
+    height: 100%;
+    width: 100%;
+    
+}
+body{
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.808);
+}
+#chat_log{
+    height: 85%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.808);
+    border-right: 5px solid greenyellow;
+
+}
+#chatPannel{
+    height: 100%;
+    width: 75%;
+}
+#logPannel{
+    height: 100%;
+    width: 25%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-left: 2px solid greenyellow;
+}
+#log{
+    height: 60%;
+    width: 75%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+#inputPannel{
+    height: 15%;
+    width: 75%;
+    display: flex;
+    background: rgba(0, 0, 0, 0.808);
+}
+#emojiButton{
+    height: 40px;
+    width: 40px;
+    font-size: 1.5em;
+}
+#attachmentButton{
+    height: 40px;
+    width: 40px;
+    font-size: 1.5em;
+}
+#composeBar{
+height: 50%;
+width: 90%;
+}
+#composeBar::placeholder{
+    font-size: 1.5em;
+}
+#voiceButton{
+    height: 40px;
+    width: 40px;
+    font-size: 1.5em;
+}
