@@ -1,0 +1,24 @@
+{
+  "name": "e2echatroom",
+  "version": "1.0.0",
+  "description": "This is a complete chat room server with End to End encrypted messages Hi guys, I'm adding a current fully functional prototype of this project here 👉🏼 https://github.com/marmabiswas123/Chat-room",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marmabiswas123/E2EChatroom.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/marmabiswas123/E2EChatroom/issues"
+  },
+  "homepage": "https://github.com/marmabiswas123/E2EChatroom#readme",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^5.1.0"
+  }
+}
