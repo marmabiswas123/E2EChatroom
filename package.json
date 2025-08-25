@@ -19,6 +19,8 @@
   "homepage": "https://github.com/marmabiswas123/E2EChatroom#readme",
   "dependencies": {
     "ejs": "^3.1.10",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "mongodb": "^6.18.0"
   }
 }

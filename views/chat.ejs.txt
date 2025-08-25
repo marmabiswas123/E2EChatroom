@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/chat.css">
+</head>
+<body>
+    <div id="chat_log">
+    <div id="chatPannel"></div>
+    <div id="logPannel">
+        <div id="log">Active Logs</div>
+    </div>
+    </div>
+    <div id="inputPannel">
+        <button id="emojiButton">🙂</button>
+        <input type="text" placeholder="Type..." id="composeBar"/>
+        <button id="attachmentButton">📎</button>
+        <input type="file" style="display: none">
+        <button id="voiceButton">🎤</button>
+
+
+    </div>
+</body>
+</html>
