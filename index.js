@@ -1,9 +1,13 @@
 const express = require("express");
-const path = require("path");
 const app = express();
+const path = require("path");
+const {createServer}=require("http");
+const server = createServer(app);
+const {Server} = require("socket.io");
+const io = new Server(server);
 const port = 8080;
 const { MongoClient } = require("mongodb");
-const session = require("express-session");
+
 
 //MongoDB connection setup
 const MongoUrl = "mongodb://localhost:3003";
@@ -34,6 +38,10 @@ app.use(express.static(path.join(__dirname, "images")));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(express.urlencoded({ extended: true }));
 
+//new user connection
+io.on('connection',(socket)=>{
+  console.log("new user connected");
+});
 
 app.get("/", (req, res) => {
   res.render("login"); 
@@ -60,7 +68,6 @@ app.get("/chat", (req, res) => {
   res.render("chat.ejs");
 });
 
-app.listen(port, () => {
+server.listen(port, () => {
   console.log(`Server running at http://localhost:${port}`);
 });
-
