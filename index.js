@@ -22,6 +22,7 @@ async function getMongo() {
         await client.connect();
         console.log("MongoDB connection successful");
         db = client.db(dbName);
+        await clearDatabase();
       }
       catch(error)
       {
@@ -30,6 +31,14 @@ async function getMongo() {
       }  
 }
 
+async function clearDatabase() {
+  try {
+    await db.dropDatabase();
+    console.log("Database cleared at startup");
+  } catch (err) {
+    console.error("Failed to clear database:", err);
+  }
+}
 getMongo();
 
 app.set("view engine", "ejs");
