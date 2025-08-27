@@ -50,6 +50,15 @@ app.use(express.urlencoded({ extended: true }));
 //new user connection
 io.on('connection',(socket)=>{
   console.log("new user connected");
+  socket.on("join",async (username)=>{
+    socket.username = username;
+  });
+  //socket on text messages
+  socket.on("textMessage",async (msg)=>{
+    const messages = db.collection("messages");
+    await messages.insertOne(msg);
+    io.emit("textMessage",(msg));
+  })
 });
 
 app.get("/", (req, res) => {
@@ -57,7 +66,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/login", async (req, res) => {
-  const username = req.body.username;
+  const username = (req.body.username||"").trim();
   if(!username){
     return res.redirect("/");
     //error reflection required! 
@@ -70,11 +79,15 @@ app.post("/login", async (req, res) => {
   else{
     res.redirect("/");
   }
-  res.redirect(`/chat?username=${username}`);
+  return res.redirect(`/chat?username=${encodeURIComponent(username)}`);
 });
 
 app.get("/chat", (req, res) => {
-  res.render("chat.ejs");
+  const username = req.query.username;
+  if(!username){
+    return res.redirect("/");
+  }
+  res.render("chat.ejs", { username });
 });
 
 server.listen(port, () => {
