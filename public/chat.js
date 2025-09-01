@@ -6,7 +6,10 @@ const emojiPicker = document.getElementById("emojiPicker");
 const composeBar = document.getElementById("composeBar");
 const sendButton = document.getElementById("sendButton");
 const attachmentButton = document.getElementById("attachmentButton");
+const fileInput = document.getElementById("fileInput");
 const voiceButton = document.getElementById("voiceButton");
+
+//emoji handler
 
 emojiButton.addEventListener("click", (e) => {
   e.stopPropagation();
@@ -37,6 +40,8 @@ function insertAtCursor(input, text) {
   input.selectionStart = input.selectionEnd = start + text.length;
   input.focus();
 }
+
+//send button
 
 sendButton.addEventListener("click", () => {
   const text = composeBar.value.trim();
@@ -78,13 +83,27 @@ function addMessage(msg) {
     userLabel.textContent = msg.username;
     bubble.appendChild(userLabel);
   }
-
-  // message content
+  
+  // text message content
+  if(msg.type == "text"){
   const content = document.createElement("div");
   content.classList.add("text");
   content.textContent = msg.message;
   bubble.appendChild(content);
-
+  }
+  else if(msg.type == "attachment"){
+    const content = document.createElement("a");
+    content.classList.add("attachment");
+    content.href = msg.url;
+    const icon = document.createElement("img");
+    icon.src = "/icons/attachment.svg";
+    icon.classList.add("attachmentIcon");
+    const fileinfo = document.createElement("div");
+    fileinfo.innerText = msg.fileName;
+    fileinfo.classList.add("attachmentName");
+    content.appendChild(icon);
+    content.appendChild(fileinfo);
+  }
   wrapper.appendChild(bubble);
   chatPannel.appendChild(wrapper);
   chatPannel.scrollTop = chatPannel.scrollHeight;
@@ -92,5 +111,34 @@ function addMessage(msg) {
 
 socket.on("textMessage", (msg) => {
   addMessage(msg);
-  console.log(msg);
+});
+
+attachmentButton.addEventListener("click", ()=>{
+  fileInput.click();
+});
+
+fileInput.addEventListener("change",async (event)=>{
+  const file = event.target.files[0];
+  if(!file){
+    return;
+  }
+  const buffer = await file.arrayBuffer();
+  const data = Array.from(new Uint8Array(buffer));
+  const attachment = {
+    type: "attachment",
+    username: USERNAME,
+    mimeType: file.type,
+    fileName: file.name,
+    data: data,
+    timestamp: Date.now()
+  };
+  //debug
+  console.log(attachment);
+  socket.emit("attachment",attachment);
+});
+
+socket.on("attachment",async (fileMeta)=>{
+  //debug
+  console.log(fileMeta);
+  addMessage(fileMeta);
 });
