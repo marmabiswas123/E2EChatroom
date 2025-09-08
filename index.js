@@ -264,11 +264,11 @@ io.on("connection", (socket) => {
           console.warn("No session found for sessionId", sid);
           return;
         }
+        // broadcast ciphertext as-is
+        io.emit("textMessage", msg);
         // store the incoming ciphertext along with the session key (base64) used to encrypt it
         const key = sessionObj.key; // base64
         await textMessages.insertOne({ ...msg, key, storedAt: Date.now() });
-        // broadcast ciphertext as-is
-        io.emit("textMessage", msg);
       } else {
         await textMessages.insertOne({ ...(msg || {}), timestamp: msg?.timestamp || Date.now() });
         io.emit("textMessage", msg);
