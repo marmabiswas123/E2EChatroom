@@ -1,0 +1,364 @@
+:root{
+  --bg-dark: #111111;
+  --panel-dark: #1a1a1a;
+  --panel-darker: #151515;
+  --accent: #ADFF2F; /* greenyellow */
+  --accent-strong: #9EE21E;
+  --sent-blue: #007bff;
+  --received-gray: #e5e5ea;
+  --compose-bg: #2b2b2b;
+  --text-light: #FFFFFF;
+  --text-muted: #AAAAAA;
+  --user-bg: #222222;
+  --scroll-thumb: #ADFF2F;
+  --shadow: 0 6px 18px rgba(0,0,0,0.45);
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --tap-size: 48px; /* recommended minimum touch target */
+}
+
+/* =============== Global reset / mobile optimizations =============== */
+html, body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-tap-highlight-color: transparent;
+  font-family: "Roboto", Arial, Helvetica, sans-serif;
+  background: var(--bg-dark);
+  color: var(--text-light);
+  touch-action: manipulation;
+  -ms-touch-action: manipulation;
+}
+
+/* Improve text legibility on smaller screens */
+body { font-size: 16px; line-height: 1.35; }
+
+/* =============== Layout containers =============== */
+#chat_log {
+  height: 85vh; /* viewport-friendly */
+  width: 100%;
+  display: flex;
+  background: var(--panel-dark);
+  border-top: 3px solid var(--accent);
+  border-right: 4px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  border-bottom: 1px solid var(--accent);
+  box-sizing: border-box;
+  overflow: hidden;
+  gap: 0;
+  align-items: stretch;
+  padding: 8px;
+}
+
+/* Main messages area */
+#chatPannel {
+  height: 100%;
+  width: 72%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+  box-shadow: var(--shadow);
+}
+
+/* Messages list styling */
+.chat-message {
+  display: flex;
+  width: 100%;
+  animation: fadeIn 200ms ease both;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+/* =============== Bubbles =============== */
+.bubble {
+  display: inline-block;
+  max-width: 78%;
+  padding: 12px 16px;
+  border-radius: var(--radius-md);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
+  font-size: 15px;
+  box-sizing: border-box;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+  -webkit-user-select: text;
+  user-select: text;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+}
+
+/* Sent (right) */
+.bubble.sent {
+  margin-left: auto;
+  background-color: var(--sent-blue);
+  color: var(--text-light);
+  border-bottom-right-radius: 4px;
+  text-align: left;
+  transform-origin: 100% 100%;
+}
+
+/* Received (left) */
+.bubble.received {
+  margin-right: auto;
+  background-color: var(--received-gray);
+  color: #000;
+  border-bottom-left-radius: 4px;
+  text-align: left;
+  transform-origin: 0% 100%;
+}
+
+/* Slight scale on press for tactile feedback */
+.bubble:active { transform: scale(0.995); }
+
+/* Username label for group chats */
+.username {
+  font-weight: 700;
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  opacity: 0.95;
+  color: #2b2b2b;
+}
+
+/* Body text */
+.text {
+  white-space: pre-wrap;
+  font-size: 1rem;
+  color: inherit;
+  word-break: break-word;
+}
+
+/* =============== Right panel (users online / log) =============== */
+#logPannel {
+  height: 100%;
+  width: 28%;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  border-top: 0px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  background: var(--panel-darker);
+  overflow-y: auto;
+  padding: 10px;
+  box-sizing: border-box;
+  gap: 8px;
+  border-radius: 10px;
+}
+
+/* container inside right panel */
+#log {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-light);
+  overflow-y: auto;
+  gap: 6px;
+}
+
+#log h3 { margin: 0 0 6px 0; color: var(--accent); font-size: 1rem; }
+
+/* each online user */
+.user-online {
+  padding: 10px 12px;
+  margin: 4px 0;
+  background: var(--user-bg);
+  border-radius: var(--radius-sm);
+  font-size: 0.95rem;
+  transition: transform 150ms ease, background 150ms ease;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.user-online:hover, .user-online:focus {
+  background: #2e2e2e;
+  transform: translateY(-2px);
+  cursor: pointer;
+  outline: none;
+}
+
+/* center 'no users' box */
+.newlog {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-light);
+  font-weight: 700;
+}
+
+/* =============== Compose / Input bar =============== */
+#inputPannel {
+  height: auto;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: var(--panel-dark);
+  border-top: 3px solid var(--accent);
+  border-right: 2px solid var(--accent);
+  border-left: 3px solid var(--accent);
+  border-bottom: 3px solid var(--accent);
+  box-sizing: border-box;
+  gap: 8px;
+  position: relative;
+}
+
+/* Compose text area */
+#composeBar {
+  flex: 1;
+  min-height: var(--tap-size);
+  border-radius: 12px;
+  border: none;
+  padding: 12px 16px;
+  font-size: 1rem;
+  margin: 0 8px;
+  outline: none;
+  background: var(--compose-bg);
+  color: var(--text-light);
+  resize: none;
+  box-sizing: border-box;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35) inset;
+}
+
+/* placeholder color */
+#composeBar::placeholder { color: var(--text-muted); }
+
+/* Buttons - icon circular buttons (emoji/attach/voice) */
+#emojiButton, #attachmentButton, #voiceButton,
+#sendButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--tap-size);
+  min-height: var(--tap-size);
+  height: var(--tap-size);
+  width: var(--tap-size);
+  font-size: 1.25rem;
+  border: none;
+  border-radius: 50%;
+  margin: 0 4px;
+  cursor: pointer;
+  transition: transform 120ms ease, background 120ms ease, color 120ms ease;
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+  box-sizing: border-box;
+}
+
+/* neutral icon buttons */
+#emojiButton, #attachmentButton, #voiceButton {
+  background: var(--compose-bg);
+  color: var(--text-light);
+}
+#emojiButton:hover, #attachmentButton:hover, #voiceButton:hover,
+#emojiButton:focus, #attachmentButton:focus, #voiceButton:focus {
+  background: var(--accent);
+  color: #000;
+  transform: translateY(-2px) scale(1.02);
+  outline: none;
+}
+
+/* Send button styling (accent) */
+#sendButton {
+  background: var(--accent);
+  color: #000;
+}
+#sendButton:hover, #sendButton:focus {
+  background: #FFFFFF;
+  color: var(--accent);
+  transform: translateY(-2px) scale(1.03);
+  outline: none;
+}
+
+/* Press state */
+#emojiButton:active, #attachmentButton:active, #voiceButton:active, #sendButton:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Accessibility: focus visible */
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible {
+  outline: 2px solid rgba(173,255,47,0.35);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* =============== Emoji picker =============== */
+#emojiPicker {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 10px;
+  background: #1e1e1e;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  padding: 10px;
+  display: none;
+  flex-wrap: wrap;
+  width: clamp(220px, 50vw, 320px);
+  max-height: 36vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+  z-index: 1000;
+}
+#emojiPicker span {
+  font-size: 1.5rem;
+  margin: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  transition: transform 120ms ease;
+}
+#emojiPicker span:hover { transform: scale(1.18); }
+
+/* =============== Scrollbars (mobile-friendly) =============== */
+#chatPannel::-webkit-scrollbar, #logPannel::-webkit-scrollbar, #emojiPicker::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+#chatPannel::-webkit-scrollbar-thumb, #logPannel::-webkit-scrollbar-thumb, #emojiPicker::-webkit-scrollbar-thumb {
+  background: var(--scroll-thumb);
+  border-radius: 10px;
+}
+
+/* =============== Animations =============== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* =============== Responsive / Android small screens =============== */
+@media (max-width: 900px) {
+  #chatPannel { width: 70%; padding: 10px; }
+  #logPannel { width: 30%; display: none; } /* hide right panel on narrow screens */
+  #chat_log { padding: 6px; gap: 6px; }
+  .bubble { max-width: 86%; font-size: 15px; padding: 10px 14px; }
+  #composeBar { font-size: 15px; min-height: 52px; }
+  #emojiButton, #attachmentButton, #voiceButton, #sendButton { min-width: 44px; min-height: 44px; width: 44px; height: 44px; }
+}
+
+/* Very small devices (phones) */
+@media (max-width: 420px) {
+  #chatPannel { width: 100%; }
+  #logPannel { display: none; }
+  .bubble { font-size: 14px; padding: 10px 12px; }
+  .username { font-size: 0.9rem; }
+}
+
+/* =============== Utility classes =============== */
+.hidden { display: none !important; }
+.center { display: flex; align-items: center; justify-content: center; }

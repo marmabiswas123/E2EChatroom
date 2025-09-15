@@ -1,4 +1,3 @@
-// index.js — fixed (replace whole file)
 const express = require("express");
 const session = require("express-session");
 const app = express();
@@ -158,6 +157,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("join", async (username) => {
+    rotateSessionKey(); // rotate when someone joins
     try {
       username = typeof username === "string" ? username.trim() : "";
       socket.username = username;
@@ -198,7 +198,6 @@ io.on("connection", (socket) => {
       socket.emit("history", historyToSend);
       io.emit("join", username);
       socket.emit("join-ack", { ok: true, username });
-      rotateSessionKey(); // rotate when someone joins
     } catch (err) {
       console.error("Error in join handler for socket", socket.id, err);
       socket.emit("join-ack", { ok: false, error: String(err) });

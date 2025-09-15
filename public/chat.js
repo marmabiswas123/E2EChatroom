@@ -6,6 +6,7 @@ const emojiButton = document.getElementById("emojiButton");
 const emojiPicker = document.getElementById("emojiPicker");
 const composeBar = document.getElementById("composeBar");
 const sendButton = document.getElementById("sendButton");
+const iw = window.innerWidth;
 
 // Emoji handlers
 if (emojiButton && emojiPicker) {
@@ -217,7 +218,12 @@ socket.on("join", (newuser) => {
     const newlog = document.createElement("span");
     newlog.classList.add("newlog");
     newlog.innerText = `${newuser || "Unknown"} joined the chat`;
+    if(iw<=420){
+      chatPannel.appendChild(newlog);
+    }
+    else{
     log.appendChild(newlog);
+    }
   } catch (e) {}
 });
 socket.on("left", (username) => {
