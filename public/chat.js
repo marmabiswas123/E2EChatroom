@@ -38,7 +38,36 @@ const sendButton = document.getElementById("sendButton");
 const iw = window.innerWidth;
 
 // === Config ===
-const PEER_ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+// === Config ===
+// Start with fallback STUN (keeps app functional if server cannot be reached)
+let PEER_ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
+const PEER_ICE_SERVERS_FALLBACK = [{ urls: "stun:stun.l.google.com:19302" }];
+
+// Fetch ExpressTURN credentials from server
+async function fetchExpressTurnCreds(ttl = 3600) {
+  try {
+    const username = (window.USERNAME || "guest");
+    const resp = await fetch(`/api/turn-credentials?user=${encodeURIComponent(username)}&ttl=${encodeURIComponent(ttl)}`, { cache: "no-store" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    if (data && data.success && Array.isArray(data.iceServers) && data.iceServers.length) {
+      PEER_ICE_SERVERS = data.iceServers;
+      console.log("Loaded TURN/STUN from server:", PEER_ICE_SERVERS);
+      return PEER_ICE_SERVERS;
+    } else {
+      console.warn("No iceServers returned by /api/turn-credentials, using fallback.", data);
+      PEER_ICE_SERVERS = PEER_ICE_SERVERS_FALLBACK;
+      return PEER_ICE_SERVERS;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch TURN credentials, using fallback STUN. Error:", err);
+    PEER_ICE_SERVERS = PEER_ICE_SERVERS_FALLBACK;
+    return PEER_ICE_SERVERS;
+  }
+}
+
+// Call early on load so subsequent RTCPeerConnection() calls use the returned servers
+fetchExpressTurnCreds().catch(e => console.warn("fetchExpressTurnCreds() failed:", e));
 const FILE_CHUNK_SIZE = 64 * 1024; // 64 KiB chunks (adjustable)
 
 // --- Utility helpers ---
