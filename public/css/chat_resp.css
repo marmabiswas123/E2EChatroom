@@ -362,3 +362,73 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
 /* =============== Utility classes =============== */
 .hidden { display: none !important; }
 .center { display: flex; align-items: center; justify-content: center; }
+
+#goPrivateBtn {
+    position: fixed;
+    right: 16px;
+    bottom: 16px;
+    z-index: 1000;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #2b6cb0;
+    color: white;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+  }
+  #goPrivateBadge { display:inline-block; width:8px; height:8px; background:red; border-radius:50%; margin-left:6px; vertical-align:middle; display:none; }
+  #privateMenu {
+    position: fixed;
+    right: 16px;
+    bottom: 62px;
+    width: 280px;
+    max-height: 400px;
+    overflow:auto;
+    z-index: 1000;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    padding: 8px;
+    display:none;
+  }
+  .privateUser { padding:8px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center; color: black;}
+  .privateUser button { margin-left:8px; }
+  .privateWindow {
+    position: fixed;
+    right: 310px; /* stacks to the left of menu; adjust or calculate if multiple */
+    bottom: 16px;
+    width: 360px;
+    max-height: 60vh;
+    z-index: 1001;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .pw-header { padding:8px; background:#f6f8fb; display:flex; justify-content:space-between; align-items:center; color: black;}
+  .pw-body { padding:8px; overflow:auto; flex:1; color: black; }
+  .pw-compose { padding:8px; display:flex; gap:6px; align-items:center; border-top:1px solid #eee; color: black; }
+  .pw-compose input[type="text"]{ flex:1; padding:6px; color: black;}
+  .pw-file-btn { cursor:pointer; }
+
+  /* hangup button styling */
+.privateWindow .hangupBtn {
+  display: inline-flex;              /* toggled via JS */
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, #ff5f6d, #ffc371);
+  border: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+  cursor: pointer;
+  margin-right: 8px;
+}
+.privateWindow .hangupBtn img {
+  width: 18px;
+  height: 18px;
+  pointer-events: none;
+  filter: invert(1);
+}

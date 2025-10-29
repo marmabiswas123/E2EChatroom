@@ -7,7 +7,9 @@ const { randomUUID } = require("crypto");
 const { createServer } = require("http");
 const server = createServer(app);
 const { Server } = require("socket.io");
-const io = new Server(server);
+const io = new Server(server,{
+  maxHttpBufferSize: 11534336
+});
 const port = 8080;
 const { MongoClient } = require("mongodb");
 
@@ -19,7 +21,6 @@ const client = new MongoClient(MongoUrl);
 let currentSessionId = null;
 let sessions = new Map();      // sessionId -> { key: base64, createdAt }
 let publicKeys = new Map();    // socketId -> pubKeyPem
-let rotationTimer = null;
 
 // presence tracking: username -> Set of socketIds
 const userSockets = new Map();
@@ -105,6 +106,24 @@ function rotateSessionKey() {
 io.on("connection", (socket) => {
   console.log("new socket connected:", socket.id);
 
+//   // Debug: log every event this socket receives (temporary)
+// socket.onAny((event, ...args) => {
+//   try {
+//     console.log(`[socket:${socket.id}] event ->`, event, args.length ? args : '(no args)');
+//   } catch (e) {
+//     console.error('onAny logging error', e);
+//   }
+// });
+
+
+  /**
+ * Send active usernames (keys of userSockets)
+ */
+  socket.on("list-users", () => {
+    const users = Array.from(userSockets.keys());
+    socket.emit("active-users", users);
+  });
+
   // store public key per-socket
   socket.on("public-key", (data) => {
     try {
@@ -156,24 +175,47 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("join", async (username) => {
-    rotateSessionKey(); // rotate when someone joins
-    try {
-      username = typeof username === "string" ? username.trim() : "";
-      socket.username = username;
+   socket.on("join", async (username) => {
+  // rotate session key on new join (keep your previous behaviour)
+  rotateSessionKey();
 
-      if (username) {
-        let set = userSockets.get(username);
-        if (!set) {
-          set = new Set();
-          userSockets.set(username, set);
-        }
-        set.add(socket.id);
-      }
+  try {
+    username = (typeof username === "string" ? username.trim() : "");
+    if (!username) {
+      socket.emit("join-ack", { ok: false, error: "missing_username" });
+      return;
+    }
+
+    // Ensure this username exists in users collection (user logged in via /login)
+    const usersCol = db.collection("users");
+    const exists = await usersCol.findOne({ username });
+    if (!exists) {
+      // If user hasn't performed /login or DB row missing, reject the socket join.
+      socket.emit("join-ack", { ok: false, error: "not_logged_in" });
+      return;
+    }
+
+    // attach username to socket
+    socket.username = username;
+
+    // Add this socket id into the presence map
+    let set = userSockets.get(username);
+    if (!set) {
+      set = new Set();
+      userSockets.set(username, set);
+    }
+    set.add(socket.id);
+
+    // Broadcast updated active-users to everyone
+    io.emit("active-users", Array.from(userSockets.keys()));
+
 
       // gather history from DB and prepare a copy to send (encrypt stored session key per-client)
       const textMessages = db.collection("textMessages");
-      const history = await textMessages.find({}).sort({ timestamp: 1 }).toArray();
+      const files = db.collection("files");
+      const textArray = await textMessages.find({}).toArray();
+      const fileArray = await files.find({}).toArray({});
+      const history = [...textArray,...fileArray].sort((a,b)=>(a.timestamp)||0-(b.timestamp||0));
 
       // prepare safe cloned history to send; do NOT mutate DB docs
       const pubPem = publicKeys.get(socket.id);
@@ -205,48 +247,52 @@ io.on("connection", (socket) => {
   });
 
   socket.on("disconnect", async (reason) => {
+  try {
+    const usernameRaw = socket.username;
     // drop public key for this socket
     publicKeys.delete(socket.id);
 
-    try {
-      const usernameRaw = socket.username;
-      if (!usernameRaw) {
-        io.emit("left", "unknown");
-        rotateSessionKey();
-        return;
-      }
+    if (!usernameRaw) {
+      io.emit("left", "unknown");
+      rotateSessionKey();
+      return;
+    }
 
-      const username = String(usernameRaw).trim();
-      if (!username) {
-        io.emit("left", "unknown");
-        rotateSessionKey();
-        return;
-      }
+    const username = String(usernameRaw).trim();
+    if (!username) {
+      io.emit("left", "unknown");
+      rotateSessionKey();
+      return;
+    }
 
-      const usersCol = db.collection("users");
-      const found = await usersCol.findOne({ username });
+    // Remove this socket id from the presence map
+    const set = userSockets.get(username);
+    if (set) {
+      set.delete(socket.id);
+      if (set.size === 0) {
+        // No more live sockets for that username: remove presence and delete DB user (as per your original logic)
+        userSockets.delete(username);
 
-      const delRes = await usersCol.deleteOne({ username });
-      if (delRes.deletedCount === 0) {
-        const regex = new RegExp(`^${escapeRegExp(username)}$`, "i");
-        await usersCol.deleteOne({ username: { $regex: regex } });
-      }
-
-      const set = userSockets.get(username);
-      if (set) {
-        set.delete(socket.id);
-        if (set.size === 0) {
-          userSockets.delete(username);
+        const usersCol = db.collection("users");
+        const delRes = await usersCol.deleteOne({ username });
+        if (delRes.deletedCount === 0) {
+          // fallback: case-insensitive remove if exact match didn't find
+          const regex = new RegExp(`^${escapeRegExp(username)}$`, "i");
+          await usersCol.deleteOne({ username: { $regex: regex } });
         }
       }
-
-      io.emit("left", username);
-      rotateSessionKey();
-    } catch (err) {
-      console.error("Error in disconnect handler for", socket.id, err);
     }
-  });
 
+    // broadcast left and active-users update
+    io.emit("left", username);
+    io.emit("active-users", Array.from(userSockets.keys()));
+
+    // rotate session key because membership changed
+    rotateSessionKey();
+  } catch (err) {
+    console.error("Error in disconnect handler for", socket.id, err);
+  }
+});
   // handle incoming messages (possibly encrypted)
   socket.on("textMessage", async (msg) => {
     try {
@@ -276,8 +322,84 @@ io.on("connection", (socket) => {
       console.error("Error storing/broadcasting message:", err);
     }
   });
+
+  /**
+ * Simple file metadata + ciphertext storage (MVP uses in-disk store)
+ * Expectation from client: { encrypted: true, sessionId?, ciphertext: base64, iv: base64, filenameEncrypted?, mime, size, sender, timestamp }
+ */
+socket.on("file-meta", async (meta) => {
+  try {
+    const filesCol = db.collection("files");
+    // sanitize and store meta as-is (server never decrypts)
+    const sid = meta.sessionId
+    const sessionOBJ = sessions.get(sid)
+    const key = sessionOBJ.key
+    const rec = {
+      ...meta,
+      key,
+      storedAt: Date.now()
+    };
+    await filesCol.insertOne(rec);
+      // broadcast to all
+      io.emit("file-meta", rec);
+  } catch (err) {
+  }
+  });
+
+  /** helper: relay to all sockets for a username */
+function relayToUser(targetUsername, eventName, payload) {
+  const set = userSockets.get(targetUsername);
+  if (!set) return;
+  for (const sid of set) {
+    const sock = io.sockets.sockets.get(sid);
+    if (sock) sock.emit(eventName, payload);
+  }
+}
+
+/** Offer */
+socket.on("webrtc-offer", (data) => {
+  const to = data?.to;
+  if (!to) return;
+  const payload = { from: socket.username };
+  if (data.offer) payload.offer = data.offer;
+  if (typeof data.media !== "undefined") payload.media = !!data.media;
+  if (data.candidate) payload.candidate = data.candidate;
+  relayToUser(to, "webrtc-offer", payload);
 });
 
+/** Answer */
+socket.on("webrtc-answer", (data) => {
+  const to = data?.to;
+  if (!to) return;
+  const payload = { from: socket.username };
+  if (data.answer) payload.answer = data.answer;
+  if (typeof data.media !== "undefined") payload.media = !!data.media;
+  if (data.candidate) payload.candidate = data.candidate;
+  relayToUser(to, "webrtc-answer", payload);
+});
+
+/** ICE candidate */
+socket.on("webrtc-ice", (data) => {
+  const to = data?.to;
+  if (!to || !data.candidate) return;
+  const payload = { from: socket.username, candidate: data.candidate };
+  if (typeof data.media !== "undefined") payload.media = !!data.media;
+  relayToUser(to, "webrtc-ice", payload);
+});
+
+socket.on("webrtc-hangup", (data) => {
+  const to = data?.to;
+  if (!to) return;
+  relayToUser(to, "webrtc-hangup", { from: socket.username });
+});
+
+/** Optional: a lightweight "call-request" so UI can show incoming call popup */
+socket.on("private-call-request", (data) => {
+  const { to, callType } = data || {};
+  if (!to) return;
+  relayToUser(to, "private-call-request", { from: socket.username, callType });
+});
+});
 // Express routes (unchanged)
 app.get("/", (req, res) => {
   const { error } = req.query;

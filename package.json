@@ -4,7 +4,8 @@
   "description": "This is a complete chat room server with End to End encrypted messages Hi guys, I'm adding a current fully functional prototype of this project here 👉🏼 https://github.com/marmabiswas123/Chat-room",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
   },
   "repository": {
     "type": "git",

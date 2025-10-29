@@ -22,7 +22,18 @@
     <button id="emojiButton">🙂</button>
     <emoji-picker id="emojiPicker" style="display:none;"></emoji-picker>
     <input type="text" placeholder="Message" id="composeBar"/>
+    <input id="fileInput" type="file" style="display:none" />
+    <button id="fileButton" title="Attach file" type="button">📎</button>
     <button id="sendButton">➤</button>
+    <button id="goPrivateBtn" title="Go Private">🔒 Go Private <span id="goPrivateBadge"></span></button>
+
+<div id="privateMenu">
+  <div style="font-weight:600; padding:6px;">Active users</div>
+  <div id="privateUserList"></div>
+</div>
+
+<!-- container for dynamic private chat windows -->
+<div id="privateWindowsContainer"></div>
   </div>
   <script>
     const USERNAME = "<%= username %>";
