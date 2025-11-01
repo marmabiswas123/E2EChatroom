@@ -6,26 +6,6 @@
 if (!(window.isSecureContext)) {
   alert("⚠️ Secure context required: Please open this site via HTTPS or localhost to enable end-to-end encryption.");
 }
-
-(function addHangupStyles(){
-  const s = document.createElement('style');
-  s.textContent = `
-  .hangupBtn{
-    background:#e53e3e;
-    color:white;
-    border:none;
-    padding:6px 10px;
-    border-radius:8px;
-    cursor:pointer;
-    box-shadow:0 2px 6px rgba(0,0,0,.18);
-    margin-right:6px;
-    font-weight:600;
-  }
-  .hangupBtn:hover{ filter:brightness(.95); }
-  `;
-  document.head.appendChild(s);
-})();
-
 const socket = io();
 const chatPannel = document.getElementById("chatPannel");
 const log = document.getElementById("log");
@@ -41,7 +21,6 @@ const iw = window.innerWidth;
 // === Config ===
 // Start with fallback STUN (keeps app functional if server cannot be reached)
 let PEER_ICE_SERVERS = [{ urls: "stun:stun.l.google.com:19302" }];
-const PEER_ICE_SERVERS_FALLBACK = [{ urls: "stun:stun.l.google.com:19302" }];
 
 // Fetch ExpressTURN credentials from server
 async function fetchExpressTurnCreds(ttl = 3600) {
@@ -55,14 +34,10 @@ async function fetchExpressTurnCreds(ttl = 3600) {
       console.log("Loaded TURN/STUN from server:", PEER_ICE_SERVERS);
       return PEER_ICE_SERVERS;
     } else {
-      console.warn("No iceServers returned by /api/turn-credentials, using fallback.", data);
-      PEER_ICE_SERVERS = PEER_ICE_SERVERS_FALLBACK;
-      return PEER_ICE_SERVERS;
+      console.warn("No iceServers returned from server");
     }
   } catch (err) {
     console.warn("Failed to fetch TURN credentials, using fallback STUN. Error:", err);
-    PEER_ICE_SERVERS = PEER_ICE_SERVERS_FALLBACK;
-    return PEER_ICE_SERVERS;
   }
 }
 
@@ -616,7 +591,10 @@ socket.on("webrtc-offer", async (data) => {
       if (localStream) {
         ap.mediaLocalStream = localStream;
         localStream.getTracks().forEach(t => ap.mediaPc.addTrack(t, localStream));
+        // only show local preview when camera/video track exists
+        if (localStream.getVideoTracks && localStream.getVideoTracks().length > 0) {
         attachLocalPreview(localStream);
+        }
       }
 
       // create answer and send back
@@ -945,7 +923,6 @@ socket.on("active-users", (users) => {
     const callBtn = document.createElement("button"); callBtn.textContent = "Call";
     callBtn.addEventListener("click", (ev) => {
       ev.stopPropagation();
-      openPrivateChat(u, true);
       outgoingCallRequests.set(u, 'audio');
       socket.emit("private-call-request", { to: u, callType: 'audio' });
       alert("Call request sent");
@@ -956,7 +933,6 @@ socket.on("active-users", (users) => {
     const videoBtn = document.createElement("button"); videoBtn.textContent = "Video";
     videoBtn.addEventListener("click", (ev) => {
       ev.stopPropagation();
-      openPrivateChat(u, true);
       outgoingCallRequests.set(u, 'video');
       socket.emit("private-call-request", { to: u, callType: 'video' });
       alert("Video call request sent");
@@ -1057,12 +1033,12 @@ async function acceptCallRequest(from) {
     ap.mediaLocalStream = stream;
     stream.getTracks().forEach(t => mediaPc.addTrack(t, stream));
     // local preview
-    attachLocalPreview(stream);
+     if (stream.getVideoTracks && stream.getVideoTracks().length > 0) {
+       attachLocalPreview(stream);
+      }
   } catch (e) {
     console.warn("getUserMedia failed for call accept (continuing without local media):", e);
   }
-
-  openPrivateChat(from, false);
 
   try {
     const offer = await mediaPc.createOffer();
@@ -1074,6 +1050,7 @@ async function acceptCallRequest(from) {
     alert("Failed to accept call request: " + (e && e.message ? e.message : e));
   }
 }
+
 
 // local preview helper
 function attachLocalPreview(stream) {
@@ -1168,7 +1145,6 @@ function showHangupForPeer(peer, visible) {
   if (!btn && visible) {
     btn = document.createElement("button");
     btn.id = `hangup-${peer}`;
-    btn.textContent = "Hang up";
     btn.className = "hangupBtn";
     btn.addEventListener("click", () => {
       socket.emit("webrtc-hangup", { to: peer });
@@ -1180,8 +1156,21 @@ function showHangupForPeer(peer, visible) {
         activePeers.set(peer, ap);
       }
       if (btn) btn.style.display = "none";
+      const del1 = document.getElementById(`remoteVideo-${peer}`);
+      const del2 = document.getElementById("localPreview");
+      try{
+      del1.remove();
+      del2.remove();
+      }
+      catch(e){
+
+      }
     });
     const container = document.getElementById("privateWindowsContainer") || document.body;
+    const btnIco = document.createElement("img");
+    btnIco.id="hangupIco";
+    btnIco.src="icons/hangup_icon.svg"
+    btn.appendChild(btnIco);
     container.appendChild(btn);
   }
   if (btn) btn.style.display = visible ? "inline-block" : "none";

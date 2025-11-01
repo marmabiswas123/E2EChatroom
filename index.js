@@ -124,15 +124,10 @@ function generateExpressTurnCreds(username = "guest", ttl = 3600) {
 
   const iceServers = [
     {
-      urls: [
-        `turn:${relayHost}?transport=udp`,
-        `turn:${relayHost}?transport=tcp`,
-        `turns:${relayHost.split(':')[0]}:443?transport=tcp`
-      ],
+      urls: `turn:${relayHost}?transport=tcp`,
       username: user,
       credential: pass
-    },
-    { urls: [`stun:${relayHost.split(':')[0]}`] }
+    }
   ];
 
   return { iceServers, ttl, turnUsername: user };

@@ -432,3 +432,109 @@ button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visib
   pointer-events: none;
   filter: invert(1);
 }
+  /* layout for the private call window */
+  .privateWindow {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: linear-gradient(180deg, rgba(20,20,30,0.95), rgba(12,12,18,0.9));
+    color: #eaeef8;
+    border-radius: 12px;
+    padding: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    z-index: 9999;
+  }
+
+  .privateWindow .pw-header {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:8px;
+    font-weight:700;
+  }
+
+ /* Centered private call window */
+.privateWindow {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(90vw, 1100px);
+  height: min(72vh, 700px);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: linear-gradient(180deg, rgba(12,12,16,0.98), rgba(6,6,8,0.98));
+  color: #e6ff66;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.6);
+  z-index: 9999;
+  border: 2px solid rgba(182, 255, 59, 0.12);
+}
+
+/* video area (the body) holds the remote video */
+.privateWindow .pw-body {
+  position: relative;      /* makes children absolute-position relative to this box */
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+/* remote video fills the pw-body cleanly */
+.privateWindow .pw-body video,
+#privateWindowsContainer video {
+  width: 100%;
+  height: 100%;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+  background: #000;
+  object-fit: cover; /* keep aspect and crop as needed */
+  display: block;
+}
+
+/* local preview as a small overlay inside the video (bottom-right) */
+#localPreview {
+  position: absolute;          /* positioned relative to .pw-body */
+  right: 12px;
+  bottom: 12px;
+  width: clamp(110px, 18%, 220px); /* responsive size */
+  aspect-ratio: 16 / 9;        /* keep preview ratio */
+  max-height: 36%;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,0.06);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.6);
+  object-fit: cover;
+  z-index: 10000;
+  overflow: hidden;
+  background: #111;
+}
+
+/* small niceties for preview content (if video tag inside preview) */
+#localPreview video, #localPreview img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  border-radius: 6px;
+}
+  .hangupBtn{
+    height: 50px;
+    width: 50px;
+  }
+  .hangupBtn:hover{ filter:brightness(.95); }
+  #hangupIco{
+    height: 50px;
+    width: 50px;
+    margin: 0;
+    padding: 0;
+  }
